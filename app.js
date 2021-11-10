@@ -14,11 +14,11 @@ app.use('/static', express.static('public'));
 
 //Handle client interface on /
 app.get('/', (req, res) => {
-  res.render('client', {version: process.version});
+  res.render('client');
 });
 //Handle display interface on /display
 app.get('/display', (req, res) => {
-  res.render('display', {version: process.version});
+  res.render('display');
 });
 
 //Start the server
