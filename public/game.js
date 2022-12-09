@@ -11,7 +11,7 @@ var app = new Vue({
         chatmessage: '',
         username: '',
         password: '',
-        me: { name: '', state: 0, score: 0 },
+        me: { username: '', state: 0, score: 0 },
         state: 0,
         players: {}
     },
@@ -73,12 +73,12 @@ function connect() {
 
     //Handle connection error
     socket.on('connect_error', function(message) {
-        alert('Unable to connect: ' + message);
+        // alert('Unable to connect: ' + message);
     });
 
     //Handle disconnection
     socket.on('disconnect', function() {
-        alert('Disconnected');
+        // alert('Disconnected');
         app.connected = false;
     });
 
