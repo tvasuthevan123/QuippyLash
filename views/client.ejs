@@ -6,8 +6,17 @@
     <h2 class="title">ECS Example Game</h2>
 
     <div id="game">
+        <p>State : {{state}}</p>
         <div v-if="connected">
             <%- include('chat'); -%>
+
+            <div v-if="state == false" class="p-2">
+                <%- include('login'); -%>
+            </div>
+
+            <div v-else-if="state >= 1" class="p-2">
+                <%- include('play'); -%>
+            </div>
         </div>
         <div v-else>
             <p>Connecting...</p>

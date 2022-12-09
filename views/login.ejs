@@ -1,0 +1,14 @@
+<div class="p-10">
+    <div v-if="error" class="alert alert-danger">
+        <strong>Error: </strong> {{error}} 
+    </div>
+
+    <div v-if="alertMsg" class="alert alert-success">
+        <strong>Alert: </strong> {{alertMsg}} 
+    </div>
+    
+    <input type="text" v-model="username" class="form-control" placeholder="Username">
+    <input type="password" v-model="password" class="form-control" placeholder="Password">
+    <button class="btn btn-lg btn-primary" @click="login">Login</button>
+    <button class="btn btn-lg btn-primary" @click="register">Register</button>
+</div>
