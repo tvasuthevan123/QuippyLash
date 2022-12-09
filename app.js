@@ -48,8 +48,9 @@ const GameState = {
   GameOver: 7   
 }
 
-let players = new Map();
-let audience = new Map();
+let userData = new Map()
+let players = new Set()
+let audience = new Set()
 let roundScores = []
 let totalScores = []
 let votes = []
@@ -87,45 +88,43 @@ async function handleFetch(route, body, requestType='POST', headers={}) {
   headers['x-functions-key'] = process.env['APP_KEY']
 
   console.log('Fetch', apiEndpoint, process.env['APP_KEY'])
-  const response = await fetch(apiEndpoint + route, {
+  const response = await(await fetch(apiEndpoint + route, {
       method: requestType,
       headers,
       body: JSON.stringify(body)
-  }).then((success) => success.json())
-  return response
-}
+  })).json()
 
-async function handleRegister(registerDetails) {
-  const response = await handleFetch('/player/register/', registerDetails)
   //Fail returns error.
   if(!response.result){
     throw Error(response.msg)
   }
 
+  return response
+}
 
-  //Successful register returns nothing, will be handled in socket handler
+async function handleRegister(registerDetails) {
+  const response = await handleFetch('/player/register/', registerDetails)
 }
 
 async function handleLogin(loginDetails, socket) {
   if(players.has(loginDetails.username) || audience.has(loginDetails.username))
     throw Error('Player already logged into game')
 
-
   const response = await handleFetch('/player/login/', loginDetails)
-  //Fail returns error.
-  if(!response.result){
-    throw Error(response.msg)
-  }
 
   //Successful login assigns user to server player state
   const username = loginDetails.username
   console.log('Welcome to player ' + username);
   announce('Welcome player ' + username);
-
+  
+  let state = 0;
   if(players.size <= 8)
-    players.set(username,{ name: username, state: 0, score: 0 });
-  else
-    audience.set(username,{ name: username, state: -1, score: 0 });
+    players.add(username)
+  else{
+    state = -1
+    audience.add(username)
+  }
+  userData.set(username, {username, state, score: 0})
 
   usersToSockets.set(username,socket);
   socketsToUsers.set(socket,username);
