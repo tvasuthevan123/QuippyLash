@@ -112,6 +112,8 @@ async function handleLogin(loginDetails, socket) {
 
   const response = await handleFetch('/player/login/', loginDetails)
 
+  if(userData.size === 0)
+    handleNext()
   //Successful login assigns user to server player state
   const username = loginDetails.username
   console.log('Welcome to player ' + username);
@@ -143,45 +145,40 @@ function handleVote(vote) {
 }
 
 function handleNext() {
-  console.log(`Progressing game state...`)
-  let newState = 'Joining'
   switch(state){
     case GameState.Joining:
+      state = GameState.Prompts
       startPrompts()
-      newState = 'Prompts'
       break
     case GameState.Prompts:
+      state = GameState.Answers
       endPrompts()
       startAnswers()
-      newState = 'Answers'
       break
-    case GameState.Answers:
+      case GameState.Answers:
+      state = GameState.Voting
       endAnswers()
       startVotes()
-      newState = 'Voting'
       break
-    case GameState.Voting:
+      case GameState.Voting:
+      state = GameState.Results
       endVotes()
       startResults()
-      newState = 'Results'
       break
     case GameState.Results:
+      state = GameState.Scores
       endResults()
       startScores()
-      newState = 'Scores'
       break
     case GameState.Scores:
+      state = 0
       endGame()
-      newState = null
       break
     default:
+      state = 1
       break
   }
-  if(newState)
-    state = GameState[newState]
-  else
-    state = false
-  console.log(`Game state is now ${newState}`)
+  console.log(`Game state is now ${state}`)
 }
 
 function handleError(socket, message, halt) {
@@ -212,8 +209,8 @@ function updateAll() {
 //Update one player
 function updatePlayer(socket) {
   const playerName = socketsToUsers.get(socket);
-  const thePlayer = players.get(playerName);
-  const data = { gameState: state, me: thePlayer, players: Object.fromEntries(players) }; 
+  const thePlayer = userData.get(playerName);
+  const data = { gameState: state, me: thePlayer, players: Object.fromEntries(userData) }; 
   socket.emit('state',data);
 }
 
@@ -251,6 +248,33 @@ function startScores() {
 }
 
 function endGame(){
+  console.log('Ending game')
+  for(const [socket, user] of socketsToUsers){
+    const currentUserState = userData.get(user)
+    userData.set(user, {
+      state: 0,
+      ...currentUserState
+    })
+
+    console.log('userData', userData.get(user))
+    updatePlayer(socket)
+    handleQuit(socket)
+  }
+}
+
+function handleQuit(socket) {
+  const player = socketsToUsers.get(socket)
+  if(!player)
+    return
+  console.log('Handling quit from player ' + player)
+
+  if(players.delete(player))
+    announce('Goodbye player ' + player)
+  audience.delete(player)
+
+  socketsToUsers.delete(socket)
+  userData.delete(player)
+  usersToSockets.delete(player)
 }
 
 //Handle new connection
@@ -265,6 +289,8 @@ io.on('connection', socket => {
   //Handle disconnection
   socket.on('disconnect', () => {
     console.log('Dropped connection');
+    handleQuit(socket)
+    updateAll();
   });
 
   socket.on('register', async registerDetails => {
