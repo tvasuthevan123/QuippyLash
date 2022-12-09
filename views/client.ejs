@@ -7,6 +7,14 @@
 
     <div id="game">
         <p>State : {{state}}</p>
+        <div v-if="error" class="alert alert-danger">
+            <strong>Error: </strong> {{error}} 
+        </div>
+    
+        <div v-if="alertMsg" class="alert alert-success">
+            <strong>Alert: </strong> {{alertMsg}} 
+        </div>
+        
         <div v-if="connected">
             <%- include('chat'); -%>
 
